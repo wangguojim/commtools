@@ -24,8 +24,7 @@ def getPid(process):
 import numpy as np
 for process in gameproc:
     pids = getPid(process)
-
-    print(pids)
+    print('kill: %s' % process,pids)
     if pids==-1:
         pass
     else:
