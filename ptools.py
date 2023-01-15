@@ -110,6 +110,13 @@ def main():
             cmd_launch.append('--input')
             cmd_launch.append(args.input)
             cmd_launch.append('"')
+        elif args.operation=='ls':
+            cmd_launch.append('"')
+            cmd_launch.append('ls')
+            cmd_launch.append(args.input)
+            cmd_launch.append('"')
+        else:
+            pass
 
 
         run_cmd = ' '.join(cmd_launch)
