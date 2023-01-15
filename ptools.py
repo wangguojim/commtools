@@ -25,10 +25,10 @@ def get_parse_args():
         description="FlashTransformers runner to help launch distributed "
                     "multi-node/multi-gpu training jobs.")
 
-    parser.add_argument("-t",
-                        "--type",
-                        default='pkill',
-                        choices=['pkill'],
+    parser.add_argument("-o",
+                        "--operation",
+                        default='kill',
+                        choices=['kill','ls'],
                         type=str,
                         help="(optional) choose launcher backend for multi-node "
                              "training.")
@@ -40,6 +40,15 @@ def get_parse_args():
                         help="Hostfile path (in MPI style) that defines the"
                              "resource pool available to the job (e.g.,host1 slots=4),"
                              "one can leave it unset if only one node is used")
+
+    parser.add_argument("-I",
+                        "--input",
+                        type=str,
+                        default='',
+                        help="input for operation"
+                             "e.g. 'pretrain' for operation 'kill' means kill all "
+                             "processes which contain 'pretrain'" )
+
 
     parser.add_argument("-e",
                         "--executable",
@@ -82,21 +91,30 @@ def fetch_hosts(args):
 def main():
     args = get_parse_args()
     resource_pool = fetch_hosts(args)
-    print(resource_pool.items())
+    print('hosts:',list(resource_pool.keys()))
+
+
+    cmd = "which python"
+    out = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout.read().splitlines()
+    python_path =str(out[0], encoding='utf-8')
     for host, slots in resource_pool.items():
         cmd_launch = ['pdsh',
                       '-f', '1024',
                       '-w']
         cmd_launch.append('ssh:' + host)
-        cmd_launch.append('"')
-        cmd_launch.append('/opt/conda/bin/python')
-        cmd_launch.append('/data/commtools/kill_process.py')
-        cmd_launch.append('"')
+
+        if args.operation=='kill':
+            cmd_launch.append('"')
+            cmd_launch.append(python_path)
+            cmd_launch.append('/data/ptools/src/kill_process.py')
+            cmd_launch.append('--input')
+            cmd_launch.append(args.input)
+            cmd_launch.append('"')
+
+
         run_cmd = ' '.join(cmd_launch)
         print(run_cmd)
         subprocess.Popen(run_cmd, shell=True)
-
- 
 
 if __name__ == '__main__':
     main()
